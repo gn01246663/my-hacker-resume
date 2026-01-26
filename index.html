@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEC_OPS_CENTER // ZI-YANG HUANG</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js for the Globe -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Fonts: Rajdhani (Tech/Military feel) -->
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-deep: #02040a;
+            --color-alert: #ff3333;
+            --color-primary: #00ccff;
+            --color-sec: #00ff99;
+            --color-dim: rgba(0, 204, 255, 0.1);
+            --border-tech: 1px solid rgba(0, 204, 255, 0.3);
+            --glass: rgba(2, 4, 10, 0.7);
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-deep);
+            color: var(--color-primary);
+            font-family: 'Rajdhani', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* [修正] 確保背景容器正確固定，不會推擠內容 */
+        #globe-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.6;
+        }
+
+        /* Overlay Grid */
+        .grid-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 204, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 204, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Main UI Layout */
+        .ui-layer {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: 350px 1fr 300px;
+            grid-template-rows: 60px 1fr 200px;
+            padding: 20px;
+            gap: 20px;
+            box-sizing: border-box;
+            pointer-events: none; /* Let clicks pass to 3D scene where needed */
+        }
+        
+        /* Make UI elements clickable */
+        .ui-panel {
+            pointer-events: auto;
+            background: var(--glass);
+            border: var(--border-tech);
+            backdrop-filter: blur(5px);
+            padding: 15px;
+            position: relative;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Decorative Corners */
+        .ui-panel::before, .ui-panel::after {
+            content: ''; position: absolute; width: 8px; height: 8px;
+            border: 2px solid var(--color-primary); transition: 0.3s;
+        }
+        .ui-panel::before { top: -1px; left: -1px; border-right: 0; border-bottom: 0; }
+        .ui-panel::after { bottom: -1px; right: -1px; border-left: 0; border-top: 0; }
+        .ui-panel:hover::before, .ui-panel:hover::after { width: 100%; height: 100%; opacity: 0.1; }
+
+        /* Header */
+        .header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--color-primary);
+            background: linear-gradient(90deg, var(--glass) 0%, transparent 100%);
+        }
+
+        /* Profile Scanner (Top Left) */
+        .profile-panel {
+            grid-row: 2 / 3;
+            grid-column: 1 / 2;
+        }
+
+        /* Center Viewport (Clear for Globe) */
+        .center-viewport {
+            grid-row: 2 / 3;
+            grid-column: 2 / 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Stats Panel (Right) */
+        .stats-panel {
+            grid-row: 2 / 3;
+            grid-column: 3 / 4;
+            overflow-y: auto;
+        }
+
+        /* Logs Panel (Bottom) */
+        .logs-panel {
+            grid-row: 3 / 4;
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 20px;
+        }
+
+        /* Typography */
+        h1 { font-weight: 700; letter-spacing: 4px; font-size: 1.5rem; text-transform: uppercase; margin: 0; }
+        h2 { color: white; font-size: 1.2rem; border-left: 3px solid var(--color-sec); padding-left: 10px; margin-bottom: 15px; }
+        .mono { font-family: 'Share Tech Mono', monospace; }
+        .label { font-size: 0.7rem; color: #666; letter-spacing: 1px; text-transform: uppercase; }
+        .value { color: white; font-size: 1rem; }
+        .alert-text { color: var(--color-alert); }
+
+        /* --- X-Ray Scanner Styles --- */
+        .scan-container {
+            width: 100%;
+            aspect-ratio: 1;
+            position: relative;
+            border: 1px solid var(--color-primary);
+            overflow: hidden;
+            margin-bottom: 15px;
+            background: #000;
+        }
+        
+        .scan-grid {
+            position: absolute; top:0; left:0; width:100%; height:100%;
+            background-image: radial-gradient(var(--color-dim) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: 2; pointer-events: none;
+        }
+
+        .base-img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%) contrast(1.2) brightness(0.8); }
+        
+        .xray-lens {
+            position: absolute; width: 100px; height: 100px;
+            border: 2px solid var(--color-alert);
+            border-radius: 50%;
+            box-shadow: 0 0 15px var(--color-alert), inset 0 0 20px rgba(255,0,0,0.5);
+            background-repeat: no-repeat;
+            display: none; pointer-events: none; z-index: 5;
+        }
+
+        .scan-bar {
+            position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+            background: var(--color-sec);
+            box-shadow: 0 0 10px var(--color-sec);
+            animation: scanning 2s linear infinite;
+            z-index: 3;
+        }
+
+        @keyframes scanning { 0% { top: 0; } 100% { top: 100%; } }
+
+        /* Skill Bars */
+        .skill-row { margin-bottom: 10px; }
+        .skill-name { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 2px; }
+        .progress-track { height: 4px; background: rgba(255,255,255,0.1); width: 100%; }
+        .progress-fill { height: 100%; background: var(--color-primary); width: 0; transition: width 1s; position: relative; }
+        .progress-fill::after { content: ''; position: absolute; right: 0; top: -2px; height: 8px; width: 2px; background: white; }
+
+        /* Log Entry */
+        .log-container {
+            flex: 1;
+            overflow-y: hidden;
+            position: relative;
+        }
+        .log-stream {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+        }
+        .log-entry {
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 2px 0;
+            display: flex;
+            opacity: 0.7;
+        }
+        .log-entry:hover { opacity: 1; background: rgba(0, 204, 255, 0.1); }
+        .timestamp { color: var(--color-sec); margin-right: 10px; width: 120px; }
+
+        /* Mobile */
+        @media (max-width: 1024px) {
+            .ui-layer {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto 1fr;
+                overflow-y: auto;
+                pointer-events: auto;
+                display: block;
+            }
+            .profile-panel, .stats-panel, .logs-panel { margin-bottom: 20px; pointer-events: auto; }
+            .center-viewport { display: none; } /* Hide center space, map is bg */
+            .header { margin-bottom: 20px; }
+            #globe-canvas { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 3D Background -->
+    <div id="globe-container"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="ui-layer">
+        
+        <!-- Header -->
+        <header class="header ui-panel" style="flex-direction: row; height: 70px;">
+            <div class="flex items-center gap-4">
+                <i class="fas fa-shield-alt text-4xl text-[var(--color-primary)] animate-pulse"></i>
+                <div>
+                    <h1>THREAT_INTEL_MAP // V.4.0</h1>
+                    <div class="mono text-xs text-[var(--color-sec)]">CONNECTED: SECURE NODE [TW-TC-01]</div>
+                </div>
+            </div>
+            <div class="flex gap-8 mr-4 hidden md:flex">
+                <div class="text-right">
+                    <div class="label">GLOBAL STATUS</div>
+                    <div class="value text-[var(--color-sec)]">DEFCON 4</div>
+                </div>
+                <div class="text-right">
+                    <div class="label">ACTIVE THREATS</div>
+                    <div class="value text-[var(--color-alert)]">BLOCKED</div>
+                </div>
+                <div class="text-right">
+                    <div class="label">SYSTEM TIME</div>
+                    <div class="value mono" id="sys-time">00:00:00</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Profile / Target Analysis -->
+        <aside class="profile-panel ui-panel">
+            <h2>TARGET_IDENTITY</h2>
+            
+            <!-- X-Ray Scanner -->
+            <div class="scan-container" id="avatar-container">
+                <div class="scan-grid"></div>
+                <div class="scan-bar"></div>
+                <!-- Base Image (Sunglasses) -->
+                <img src="https://via.placeholder.com/300/000000/00ccff?text=TARGET_LOCKED" 
+                     id="base-avatar" class="base-img">
+                <!-- Lens -->
+                <div id="lens" class="xray-lens"></div>
+                
+                <div class="absolute bottom-2 left-2 text-xs bg-black px-2 text-[var(--color-alert)] border border-[var(--color-alert)]">
+                    SCANNING...
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div class="flex justify-between border-b border-[var(--border-tech)] pb-1">
+                    <span class="label">CODENAME</span>
+                    <span class="value mono text-[var(--color-primary)]">ZI-YANG HUANG</span>
+                </div>
+                <div class="flex justify-between border-b border-[var(--border-tech)] pb-1">
+                    <span class="label">ROLE</span>
+                    <span class="value">SOC ARCHITECT</span>
+                </div>
+                <div class="flex justify-between border-b border-[var(--border-tech)] pb-1">
+                    <span class="label">BASE</span>
+                    <span class="value">TAICHUNG, TW</span>
+                </div>
+                <div class="flex justify-between border-b border-[var(--border-tech)] pb-1">
+                    <span class="label">CLEARANCE</span>
+                    <span class="value text-[var(--color-sec)]">LEVEL 5 (ADMIN)</span>
+                </div>
+            </div>
+
+            <div class="mt-auto pt-4">
+                <div class="label mb-2">COMMUNICATION CHANNELS</div>
+                <div class="flex gap-2">
+                    <button class="flex-1 bg-[rgba(0,204,255,0.1)] border border-[var(--color-primary)] text-[var(--color-primary)] py-2 hover:bg-[var(--color-primary)] hover:text-black transition uppercase text-xs" onclick="alert('Decrypting email protocol...')">
+                        <i class="fas fa-envelope mr-1"></i> Email
+                    </button>
+                    <button class="flex-1 bg-[rgba(0,204,255,0.1)] border border-[var(--color-primary)] text-[var(--color-primary)] py-2 hover:bg-[var(--color-primary)] hover:text-black transition uppercase text-xs" onclick="alert('Establishing GitHub Uplink...')">
+                        <i class="fab fa-github mr-1"></i> Repo
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center Message -->
+        <div class="center-viewport pointer-events-none">
+            <div class="text-center">
+                <div class="text-[var(--color-primary)] text-6xl font-bold opacity-20 tracking-widest">MONITORING</div>
+            </div>
+        </div>
+
+        <!-- Right: Threat Capabilities (Skills) -->
+        <aside class="stats-panel ui-panel">
+            <h2>DEFENSE_MODULES</h2>
+            
+            <div class="mb-6">
+                <div class="label mb-2 text-[var(--color-alert)]">>> TRAFFIC_ANALYSIS</div>
+                <div class="skill-row">
+                    <div class="skill-name"><span>Wireshark / Tcpdump</span> <span class="mono">98%</span></div>
+                    <div class="progress-track"><div class="progress-fill" style="width: 98%; background: var(--color-alert);"></div></div>
+                </div>
+                <div class="skill-row">
+                    <div class="skill-name"><span>DDoS Mitigation</span> <span class="mono">90%</span></div>
+                    <div class="progress-track"><div class="progress-fill" style="width: 90%; background: var(--color-alert);"></div></div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <div class="label mb-2 text-[var(--color-sec)]">>> INFRASTRUCTURE</div>
+                <div class="skill-row">
+                    <div class="skill-name"><span>FortiSIEM (SOC)</span> <span class="mono">95%</span></div>
+                    <div class="progress-track"><div class="progress-fill" style="width: 95%;"></div></div>
+                </div>
+                <div class="skill-row">
+                    <div class="skill-name"><span>Linux / Docker</span> <span class="mono">92%</span></div>
+                    <div class="progress-track"><div class="progress-fill" style="width: 92%;"></div></div>
+                </div>
+                <div class="skill-row">
+                    <div class="skill-name"><span>Suricata (IDS)</span> <span class="mono">88%</span></div>
+                    <div class="progress-track"><div class="progress-fill" style="width: 88%;"></div></div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <div class="label mb-2 text-purple-400">>> R&D_WEAPONS</div>
+                <div class="skill-row">
+                    <div class="skill-name"><span>Python / Automation</span> <span class="mono">85%</span></div>
+                    <div class="progress-track"><div class="progress-fill" style="width: 85%; background: #a855f7;"></div></div>
+                </div>
+                <div class="skill-row">
+                    <div class="skill-name"><span>AI / YOLO Model</span> <span class="mono">80%</span></div>
+                    <div class="progress-track"><div class="progress-fill" style="width: 80%; background: #a855f7;"></div></div>
+                </div>
+            </div>
+
+            <div class="p-2 border border-[var(--color-dim)] bg-[rgba(0,0,0,0.3)] text-xs mono">
+                <span class="text-[var(--color-sec)]">> STATUS:</span> Certifications Verified<br>
+                > CEH (Certified Ethical Hacker)<br>
+                > IASP Industrial Experience
+            </div>
+        </aside>
+
+        <!-- Bottom: Operation Logs (Projects) -->
+        <footer class="logs-panel ui-panel">
+            <div class="w-1/3 border-r border-[var(--border-tech)] pr-4 flex flex-col">
+                <h2>OPERATION_LOGS</h2>
+                <div class="text-xs text-gray-400 mb-2">REAL-TIME ACTIVITY FEED</div>
+                <div class="mt-auto">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-3 h-3 rounded-full bg-[var(--color-sec)] animate-pulse"></div>
+                        <span class="text-sm">SYSTEM OPTIMAL</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="log-container">
+                <div class="log-stream" id="log-stream">
+                    <!-- Logs generated by JS -->
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <script>
+        // --- 1. CONFIG: YOUR IMAGES HERE ---
+        const realPhotoUrl = "https://via.placeholder.com/600/ffffff/000000?text=ZI-YANG"; 
+        // -----------------------------------
+
+        // --- 2. Three.js Globe Visualization ---
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('globe-container').appendChild(renderer.domElement);
+
+        // Sphere (The Globe Wireframe)
+        const geometry = new THREE.IcosahedronGeometry(10, 2);
+        const material = new THREE.MeshBasicMaterial({ 
+            color: 0x0044ff, 
+            wireframe: true,
+            transparent: true,
+            opacity: 0.3
+        });
+        const globe = new THREE.Mesh(geometry, material);
+        scene.add(globe);
+
+        // Core (Solid inner)
+        const coreGeo = new THREE.IcosahedronGeometry(9.8, 2);
+        const coreMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+        const core = new THREE.Mesh(coreGeo, coreMat);
+        scene.add(core);
+
+        // Particles (Satellites/Nodes)
+        const particlesGeo = new THREE.BufferGeometry();
+        const particleCount = 200;
+        const posArray = new Float32Array(particleCount * 3);
+
+        for(let i = 0; i < particleCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 25; // Scatter around
+        }
+        particlesGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particlesMat = new THREE.PointsMaterial({
+            size: 0.05,
+            color: 0x00ccff,
+        });
+        const particlesMesh = new THREE.Points(particlesGeo, particlesMat);
+        scene.add(particlesMesh);
+
+        // Threat Lines (Arcs representing traffic)
+        // Simple curved lines orbiting
+        const linesMaterial = new THREE.LineBasicMaterial({ color: 0xff3333, transparent: true, opacity: 0.4 });
+        const lineGeo = new THREE.BufferGeometry();
+        const points = [];
+        // Create a ring of points
+        for (let i = 0; i <= 50; i++) {
+            const angle = (i / 50) * Math.PI * 2;
+            points.push(new THREE.Vector3(Math.cos(angle) * 12, Math.sin(angle) * 12, 0));
+        }
+        lineGeo.setFromPoints(points);
+        const ring = new THREE.Line(lineGeo, linesMaterial);
+        ring.rotation.x = Math.PI / 2;
+        scene.add(ring);
+
+        camera.position.z = 25;
+
+        // Animation Loop
+        function animate() {
+            requestAnimationFrame(animate);
+            globe.rotation.y += 0.002;
+            core.rotation.y += 0.002;
+            particlesMesh.rotation.y += 0.0005;
+            ring.rotation.z -= 0.01;
+            ring.rotation.x = Math.sin(Date.now() * 0.001) * 0.5;
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+
+        // --- 3. UI Interactions ---
+
+        // System Time Update
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('sys-time').innerText = now.toISOString().split('T')[1].split('.')[0] + " UTC";
+        }, 1000);
+
+        // Logs Generator (Data from Resume)
+        const logs = [
+            { time: "2024-NOW", msg: "INIT: SOC Architecture Construction [Lead]", type: "INFO" },
+            { time: "2024-11", msg: "DEPLOY: FortiSIEM Log Integration Complete", type: "SUCCESS" },
+            { time: "2024-10", msg: "PATCH: Greenbone Vulnerability Scan & Fix", type: "WARN" },
+            { time: "2024-09", msg: "TEST: Suricata IDS Proof of Concept", type: "INFO" },
+            { time: "2023-06", msg: "JOIN: Taiwan Digital Optical (TBC) - Analyst", type: "INFO" },
+            { time: "2021-10", msg: "PROJECT: T-Brain AI OCR Competition [Score: 0.617]", type: "SUCCESS" },
+            { time: "2021-09", msg: "TRAINING: YOLO Model Image Pre-processing", type: "INFO" },
+            { time: "2019-05", msg: "OPS: MIS Infrastructure Maintenance @ Yi-Sheng", type: "INFO" },
+            { time: "SYSTEM", msg: "DETECTED: High proficiency in Packet Analysis", type: "ALERT" },
+            { time: "SYSTEM", msg: "CERTIFIED: CEH Ethical Hacker Verified", type: "SUCCESS" }
+        ];
+
+        const logStream = document.getElementById('log-stream');
+        
+        function renderLogs() {
+            let html = '';
+            logs.forEach(log => {
+                let colorClass = 'text-white';
+                if(log.type === 'SUCCESS') colorClass = 'text-[var(--color-sec)]';
+                if(log.type === 'WARN') colorClass = 'text-yellow-400';
+                if(log.type === 'ALERT') colorClass = 'text-[var(--color-alert)]';
+
+                html += `
+                    <div class="log-entry">
+                        <span class="timestamp mono">[${log.time}]</span>
+                        <span class="${colorClass}">${log.type} :: ${log.msg}</span>
+                    </div>
+                `;
+            });
+            logStream.innerHTML = html;
+        }
+        renderLogs();
+
+        // Scroll Log Effect (Marquee style vertical)
+        let scrollY = 0;
+        function animateLogs() {
+            // Very simple upward scroll reset
+            // In a real app, we'd append new logs. Here just static.
+        }
+
+
+        // --- 4. X-Ray Lens Logic ---
+        const container = document.getElementById('avatar-container');
+        const lens = document.getElementById('lens');
+        const baseImg = document.getElementById('base-avatar');
+
+        lens.style.backgroundImage = `url('${realPhotoUrl}')`;
+        const zoomLevel = 2; 
+
+        container.addEventListener('mouseenter', () => { lens.style.display = 'block'; });
+        container.addEventListener('mouseleave', () => { lens.style.display = 'none'; });
+        container.addEventListener('mousemove', moveLens);
+
+        function moveLens(e) {
+            e.preventDefault();
+            const pos = getCursorPos(e);
+            
+            let x = pos.x - (lens.offsetWidth / 2);
+            let y = pos.y - (lens.offsetHeight / 2);
+
+            // Bounds
+            if (x > baseImg.width - lens.offsetWidth) { x = baseImg.width - lens.offsetWidth; }
+            if (x < 0) { x = 0; }
+            if (y > baseImg.height - lens.offsetHeight) { y = baseImg.height - lens.offsetHeight; }
+            if (y < 0) { y = 0; }
+
+            lens.style.left = x + "px";
+            lens.style.top = y + "px";
+            lens.style.backgroundSize = (baseImg.width * zoomLevel) + "px " + (baseImg.height * zoomLevel) + "px";
+            lens.style.backgroundPosition = "-" + (pos.x * zoomLevel - lens.offsetWidth / 2) + "px -" + (pos.y * zoomLevel - lens.offsetHeight / 2) + "px";
+        }
+
+        function getCursorPos(e) {
+            let a, x = 0, y = 0;
+            e = e || window.event;
+            a = baseImg.getBoundingClientRect();
+            x = e.pageX - a.left - window.scrollX;
+            y = e.pageY - a.top - window.scrollY;
+            return {x : x, y : y};
+        }
+
+    </script>
+</body>
+</html>
