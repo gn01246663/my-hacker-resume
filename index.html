@@ -155,11 +155,11 @@
             display: block; /* Ensure it takes up space */
         }
         
-        /* Lens: Updated size to 250px (Much larger) */
+        /* Lens: Updated size to 500px (Huge as requested) */
         .xray-lens { 
             position: absolute; 
-            width: 250px; 
-            height: 250px; 
+            width: 500px; 
+            height: 500px; 
             border: 2px solid var(--color-alert); 
             border-radius: 50%; 
             box-shadow: 0 0 15px var(--color-alert), inset 0 0 20px rgba(255,0,0,0.5); 
@@ -429,14 +429,15 @@
                 <div class="scan-bar"></div>
                 
                 <!-- 
-                   UPDATED BASE PHOTO:
-                   Direct link to 大頭貼.jpg
+                   UPDATED BASE PHOTO: Added fallback for case sensitivity 
+                   大頭貼.jpg -> 大頭貼.JPG -> 大頭貼.png
                 -->
                 <img src="大頭貼.jpg" 
                      id="base-avatar" 
                      class="base-img" 
                      draggable="false" 
-                     alt="Hacker Profile">
+                     alt="Hacker Profile"
+                     onerror="this.onerror=null; this.src='大頭貼.JPG'; this.onerror=function(){this.src='大頭貼.png'}">
                      
                 <div id="lens" class="xray-lens"></div>
                 <div class="absolute bottom-2 left-2 text-xs bg-black px-2 text-[var(--color-alert)] border border-[var(--color-alert)]">
