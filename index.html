@@ -145,13 +145,21 @@
             z-index: 5; /* Grid on top */
         }
         
-        /* Removed .base-img styles since we removed the image tag */
+        .base-img { 
+            width: 100%; height: 100%; 
+            object-fit: cover; 
+            /* REMOVED GRAYSCALE FILTER so it shows color */
+            /* filter: grayscale(100%) contrast(1.2) brightness(0.8); */
+            position: relative; /* Ensure it respects z-index context */
+            z-index: 1; /* Base level */
+            display: block; /* Ensure it takes up space */
+        }
         
-        /* Lens: Updated size to 300px */
+        /* Lens: Updated size to 200px */
         .xray-lens { 
             position: absolute; 
-            width: 300px; 
-            height: 300px; 
+            width: 200px; 
+            height: 200px; 
             border: 2px solid var(--color-alert); 
             border-radius: 50%; 
             box-shadow: 0 0 15px var(--color-alert), inset 0 0 20px rgba(255,0,0,0.5); 
@@ -420,7 +428,16 @@
                 <div class="scan-grid"></div>
                 <div class="scan-bar"></div>
                 
-                <!-- REMOVED BASE IMAGE TAG COMPLETELY -->
+                <!-- 
+                   UPDATED BASE PHOTO:
+                   Direct link to 大頭貼.jpg
+                -->
+                <img src="大頭貼.jpg" 
+                     id="base-avatar" 
+                     class="base-img" 
+                     draggable="false" 
+                     alt="Hacker Profile"
+                     onerror="this.onerror=null; this.src='大頭貼.JPG'; this.onerror=function(){this.src='大頭貼.png'}">
                      
                 <div id="lens" class="xray-lens"></div>
                 <div class="absolute bottom-2 left-2 text-xs bg-black px-2 text-[var(--color-alert)] border border-[var(--color-alert)]">
@@ -614,7 +631,15 @@
         // --- 3. UI Interactions ---
         setInterval(() => {
             const now = new Date();
-            document.getElementById('sys-time').innerText = now.toISOString().split('T')[1].split('.')[0] + " UTC";
+            // Calculate UTC+8
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const nd = new Date(utc + (3600000 * 8));
+            
+            const h = nd.getHours().toString().padStart(2, '0');
+            const m = nd.getMinutes().toString().padStart(2, '0');
+            const s = nd.getSeconds().toString().padStart(2, '0');
+            
+            document.getElementById('sys-time').innerText = `${h}:${m}:${s} UTC+8`;
         }, 1000);
 
         const logs = [
@@ -674,8 +699,7 @@
         // --- 5. X-Ray Lens Logic ---
         const container = document.getElementById('avatar-container');
         const lens = document.getElementById('lens');
-        // baseImg variable removed as image tag is gone
-        
+        const baseImg = document.getElementById('base-avatar');
         lens.style.backgroundImage = `url('${realPhotoUrl}')`;
         const zoomLevel = 1; // NO ZOOM
 
