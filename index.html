@@ -403,8 +403,9 @@
             <div class="scan-container" id="avatar-container" title="Click to view full dossier">
                 <div class="scan-grid"></div>
                 <div class="scan-bar"></div>
-                <img src="https://via.placeholder.com/300/000000/00ccff?text=TARGET_LOCKED" 
-                     id="base-avatar" class="base-img" draggable="false">
+                <!-- UPDATED BASE PHOTO: Needs user's hacker/sunglasses photo -->
+                <img src="./hacker_sunglasses.jpg" 
+                     id="base-avatar" class="base-img" draggable="false" alt="Hacker Profile">
                 <div id="lens" class="xray-lens"></div>
                 <div class="absolute bottom-2 left-2 text-xs bg-black px-2 text-[var(--color-alert)] border border-[var(--color-alert)]">
                     SCANNING...
@@ -528,7 +529,8 @@
 
     <script>
         // --- 1. CONFIG: YOUR IMAGES HERE ---
-        const realPhotoUrl = "https://via.placeholder.com/600/ffffff/000000?text=ZI-YANG"; 
+        // Life Photo (Revealed by lens) - Using the filename you uploaded
+        const realPhotoUrl = "./image_c74e7b.png"; 
         // -----------------------------------
 
         // --- 2. Three.js Globe Visualization ---
