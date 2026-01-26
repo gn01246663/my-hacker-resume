@@ -145,21 +145,13 @@
             z-index: 5; /* Grid on top */
         }
         
-        .base-img { 
-            width: 100%; height: 100%; 
-            object-fit: cover; 
-            /* REMOVED GRAYSCALE FILTER so it shows color */
-            /* filter: grayscale(100%) contrast(1.2) brightness(0.8); */
-            position: relative; /* Ensure it respects z-index context */
-            z-index: 1; /* Base level */
-            display: block; /* Ensure it takes up space */
-        }
+        /* Removed .base-img styles since we removed the image tag */
         
-        /* Lens: Updated size to 500px (Huge as requested) */
+        /* Lens: Updated size to 300px */
         .xray-lens { 
             position: absolute; 
-            width: 500px; 
-            height: 500px; 
+            width: 300px; 
+            height: 300px; 
             border: 2px solid var(--color-alert); 
             border-radius: 50%; 
             box-shadow: 0 0 15px var(--color-alert), inset 0 0 20px rgba(255,0,0,0.5); 
@@ -428,16 +420,7 @@
                 <div class="scan-grid"></div>
                 <div class="scan-bar"></div>
                 
-                <!-- 
-                   UPDATED BASE PHOTO: Added fallback for case sensitivity 
-                   大頭貼.jpg -> 大頭貼.JPG -> 大頭貼.png
-                -->
-                <img src="大頭貼.jpg" 
-                     id="base-avatar" 
-                     class="base-img" 
-                     draggable="false" 
-                     alt="Hacker Profile"
-                     onerror="this.onerror=null; this.src='大頭貼.JPG'; this.onerror=function(){this.src='大頭貼.png'}">
+                <!-- REMOVED BASE IMAGE TAG COMPLETELY -->
                      
                 <div id="lens" class="xray-lens"></div>
                 <div class="absolute bottom-2 left-2 text-xs bg-black px-2 text-[var(--color-alert)] border border-[var(--color-alert)]">
@@ -691,9 +674,10 @@
         // --- 5. X-Ray Lens Logic ---
         const container = document.getElementById('avatar-container');
         const lens = document.getElementById('lens');
-        const baseImg = document.getElementById('base-avatar');
+        // baseImg variable removed as image tag is gone
+        
         lens.style.backgroundImage = `url('${realPhotoUrl}')`;
-        const zoomLevel = 2; 
+        const zoomLevel = 1; // NO ZOOM
 
         container.addEventListener('mouseenter', () => { lens.style.display = 'block'; });
         container.addEventListener('mouseleave', () => { lens.style.display = 'none'; });
@@ -704,20 +688,30 @@
             const pos = getCursorPos(e);
             let x = pos.x - (lens.offsetWidth / 2);
             let y = pos.y - (lens.offsetHeight / 2);
-            if (x > baseImg.width - lens.offsetWidth) x = baseImg.width - lens.offsetWidth;
+            
+            // Container dimensions
+            const cWidth = container.offsetWidth;
+            const cHeight = container.offsetHeight;
+
+            if (x > cWidth - lens.offsetWidth) x = cWidth - lens.offsetWidth;
             if (x < 0) x = 0;
-            if (y > baseImg.height - lens.offsetHeight) y = baseImg.height - lens.offsetHeight;
+            if (y > cHeight - lens.offsetHeight) y = cHeight - lens.offsetHeight;
             if (y < 0) y = 0;
+            
             lens.style.left = x + "px";
             lens.style.top = y + "px";
-            lens.style.backgroundSize = (baseImg.width * zoomLevel) + "px " + (baseImg.height * zoomLevel) + "px";
-            lens.style.backgroundPosition = "-" + (pos.x * zoomLevel - lens.offsetWidth / 2) + "px -" + (pos.y * zoomLevel - lens.offsetHeight / 2) + "px";
+            
+            // Set background size to match container size exactly (for no zoom effect)
+            lens.style.backgroundSize = cWidth + "px " + cHeight + "px";
+            
+            // Move background opposite to lens movement to keep image static
+            lens.style.backgroundPosition = "-" + x + "px -" + y + "px";
         }
 
         function getCursorPos(e) {
             let a, x = 0, y = 0;
             e = e || window.event;
-            a = baseImg.getBoundingClientRect();
+            a = container.getBoundingClientRect();
             x = e.pageX - a.left - window.scrollX;
             y = e.pageY - a.top - window.scrollY;
             return {x : x, y : y};
