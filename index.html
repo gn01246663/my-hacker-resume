@@ -19,7 +19,7 @@
             --color-sec: #00ff99;
             --color-dim: rgba(0, 204, 255, 0.1);
             --border-tech: 1px solid rgba(0, 204, 255, 0.3);
-            --glass: rgba(2, 4, 10, 0.7);
+            --glass: rgba(2, 4, 10, 0.85);
         }
 
         body {
@@ -31,7 +31,7 @@
             height: 100vh;
         }
 
-        /* [修正] 確保背景容器正確固定，不會推擠內容 */
+        /* Fixed Background */
         #globe-container {
             position: fixed;
             top: 0;
@@ -66,12 +66,11 @@
             padding: 20px;
             gap: 20px;
             box-sizing: border-box;
-            pointer-events: none; /* Let clicks pass to 3D scene where needed */
+            pointer-events: none; /* Allows clicking through to globe for empty spaces */
         }
         
-        /* Make UI elements clickable */
         .ui-panel {
-            pointer-events: auto;
+            pointer-events: auto; /* Re-enable clicks for panels */
             background: var(--glass);
             border: var(--border-tech);
             backdrop-filter: blur(5px);
@@ -101,35 +100,11 @@
             background: linear-gradient(90deg, var(--glass) 0%, transparent 100%);
         }
 
-        /* Profile Scanner (Top Left) */
-        .profile-panel {
-            grid-row: 2 / 3;
-            grid-column: 1 / 2;
-        }
-
-        /* Center Viewport (Clear for Globe) */
-        .center-viewport {
-            grid-row: 2 / 3;
-            grid-column: 2 / 3;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Stats Panel (Right) */
-        .stats-panel {
-            grid-row: 2 / 3;
-            grid-column: 3 / 4;
-            overflow-y: auto;
-        }
-
-        /* Logs Panel (Bottom) */
-        .logs-panel {
-            grid-row: 3 / 4;
-            grid-column: 1 / -1;
-            display: flex;
-            gap: 20px;
-        }
+        /* Grid Areas */
+        .profile-panel { grid-row: 2 / 3; grid-column: 1 / 2; }
+        .center-viewport { grid-row: 2 / 3; grid-column: 2 / 3; display: flex; align-items: center; justify-content: center; }
+        .stats-panel { grid-row: 2 / 3; grid-column: 3 / 4; overflow-y: auto; }
+        .logs-panel { grid-row: 3 / 4; grid-column: 1 / -1; display: flex; gap: 20px; }
 
         /* Typography */
         h1 { font-weight: 700; letter-spacing: 4px; font-size: 1.5rem; text-transform: uppercase; margin: 0; }
@@ -139,43 +114,35 @@
         .value { color: white; font-size: 1rem; }
         .alert-text { color: var(--color-alert); }
 
-        /* --- X-Ray Scanner Styles --- */
+        /* Scanner */
         .scan-container {
-            width: 100%;
-            aspect-ratio: 1;
-            position: relative;
-            border: 1px solid var(--color-primary);
-            overflow: hidden;
-            margin-bottom: 15px;
+            width: 100%; aspect-ratio: 1; position: relative;
+            border: 1px solid var(--color-primary); 
+            overflow: hidden; 
+            margin-bottom: 15px; 
             background: #000;
+            cursor: pointer; /* Changed to pointer to indicate clickability */
+            transition: border-color 0.3s;
         }
-        
-        .scan-grid {
-            position: absolute; top:0; left:0; width:100%; height:100%;
-            background-image: radial-gradient(var(--color-dim) 1px, transparent 1px);
-            background-size: 20px 20px;
-            z-index: 2; pointer-events: none;
+        .scan-container:hover {
+            border-color: var(--color-sec); /* Highlight on hover */
         }
 
+        .scan-grid { position: absolute; top:0; left:0; width:100%; height:100%; background-image: radial-gradient(var(--color-dim) 1px, transparent 1px); background-size: 20px 20px; z-index: 2; pointer-events: none; }
         .base-img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%) contrast(1.2) brightness(0.8); }
         
-        .xray-lens {
-            position: absolute; width: 100px; height: 100px;
-            border: 2px solid var(--color-alert);
-            border-radius: 50%;
-            box-shadow: 0 0 15px var(--color-alert), inset 0 0 20px rgba(255,0,0,0.5);
-            background-repeat: no-repeat;
-            display: none; pointer-events: none; z-index: 5;
+        .xray-lens { 
+            position: absolute; width: 100px; height: 100px; 
+            border: 2px solid var(--color-alert); 
+            border-radius: 50%; 
+            box-shadow: 0 0 15px var(--color-alert), inset 0 0 20px rgba(255,0,0,0.5); 
+            background-repeat: no-repeat; 
+            display: none; 
+            pointer-events: none; /* Crucial: allows clicks to pass through lens to container */
+            z-index: 5; 
         }
-
-        .scan-bar {
-            position: absolute; top: 0; left: 0; width: 100%; height: 2px;
-            background: var(--color-sec);
-            box-shadow: 0 0 10px var(--color-sec);
-            animation: scanning 2s linear infinite;
-            z-index: 3;
-        }
-
+        
+        .scan-bar { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--color-sec); box-shadow: 0 0 10px var(--color-sec); animation: scanning 2s linear infinite; z-index: 3; pointer-events: none; }
         @keyframes scanning { 0% { top: 0; } 100% { top: 100%; } }
 
         /* Skill Bars */
@@ -183,41 +150,75 @@
         .skill-name { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 2px; }
         .progress-track { height: 4px; background: rgba(255,255,255,0.1); width: 100%; }
         .progress-fill { height: 100%; background: var(--color-primary); width: 0; transition: width 1s; position: relative; }
-        .progress-fill::after { content: ''; position: absolute; right: 0; top: -2px; height: 8px; width: 2px; background: white; }
 
-        /* Log Entry */
-        .log-container {
-            flex: 1;
-            overflow-y: hidden;
-            position: relative;
-        }
-        .log-stream {
-            position: absolute; bottom: 0; left: 0; width: 100%;
-        }
-        .log-entry {
-            font-size: 0.85rem;
-            margin-bottom: 5px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            padding: 2px 0;
-            display: flex;
-            opacity: 0.7;
-        }
+        /* Logs */
+        .log-container { flex: 1; overflow-y: hidden; position: relative; }
+        .log-stream { position: absolute; bottom: 0; left: 0; width: 100%; }
+        .log-entry { font-size: 0.85rem; margin-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 2px 0; display: flex; opacity: 0.7; }
         .log-entry:hover { opacity: 1; background: rgba(0, 204, 255, 0.1); }
         .timestamp { color: var(--color-sec); margin-right: 10px; width: 120px; }
 
+        /* --- MODAL STYLES (New) --- */
+        #dossier-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            z-index: 100;
+            display: none; /* Hidden by default */
+            align-items: center; justify-content: center;
+        }
+        
+        .modal-content {
+            width: 80%; max-width: 900px; height: 85%;
+            background: rgba(5, 10, 20, 0.95);
+            border: 1px solid var(--color-primary);
+            box-shadow: 0 0 50px rgba(0, 204, 255, 0.2);
+            padding: 0;
+            display: flex; flex-direction: column;
+            animation: modalOpen 0.3s ease-out;
+            position: relative;
+        }
+
+        @keyframes modalOpen { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .modal-header {
+            background: rgba(0, 204, 255, 0.1);
+            padding: 15px 30px;
+            border-bottom: 1px solid var(--color-primary);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .modal-body {
+            padding: 30px;
+            overflow-y: auto;
+            color: #d1d5db;
+            font-family: 'Share Tech Mono', monospace; /* Monospace for report feel */
+        }
+        
+        .modal-close {
+            background: transparent; border: none; color: var(--color-alert); 
+            font-size: 1.5rem; cursor: pointer; transition: 0.2s;
+        }
+        .modal-close:hover { text-shadow: 0 0 10px var(--color-alert); transform: scale(1.1); }
+
+        .report-section { margin-bottom: 30px; border-left: 2px solid var(--color-primary); padding-left: 20px; }
+        .report-title { color: var(--color-sec); font-size: 1.2rem; margin-bottom: 10px; font-weight: bold; text-transform: uppercase; }
+        .job-item { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px dashed rgba(255,255,255,0.1); }
+        .job-header { display: flex; justify-content: space-between; margin-bottom: 5px; color: white; }
+        .job-tags { display: flex; gap: 5px; margin-top: 5px; }
+        .tag { font-size: 0.7rem; padding: 2px 6px; border: 1px solid var(--color-primary); color: var(--color-primary); border-radius: 2px; }
+
+        /* Custom Scrollbar for modal */
+        .modal-body::-webkit-scrollbar { width: 8px; }
+        .modal-body::-webkit-scrollbar-track { background: #000; }
+        .modal-body::-webkit-scrollbar-thumb { background: var(--color-primary); }
+
         /* Mobile */
         @media (max-width: 1024px) {
-            .ui-layer {
-                grid-template-columns: 1fr;
-                grid-template-rows: auto auto auto 1fr;
-                overflow-y: auto;
-                pointer-events: auto;
-                display: block;
-            }
-            .profile-panel, .stats-panel, .logs-panel { margin-bottom: 20px; pointer-events: auto; }
-            .center-viewport { display: none; } /* Hide center space, map is bg */
-            .header { margin-bottom: 20px; }
-            #globe-canvas { opacity: 0.3; }
+            .ui-layer { display: block; overflow-y: auto; pointer-events: auto; }
+            .profile-panel, .stats-panel, .logs-panel { margin-bottom: 20px; }
+            .center-viewport { display: none; }
+            .modal-content { width: 95%; height: 95%; }
+            .job-header { flex-direction: column; }
         }
     </style>
 </head>
@@ -227,6 +228,137 @@
     <div id="globe-container"></div>
     <div class="grid-overlay"></div>
 
+    <!-- MODAL (Hidden by default) -->
+    <div id="dossier-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-file-contract text-2xl text-[var(--color-primary)]"></i>
+                    <div>
+                        <h2 style="margin:0; border:none; padding:0; color:var(--color-primary);">CONFIDENTIAL_DOSSIER</h2>
+                        <span class="text-xs text-[var(--color-sec)]">AUTHORIZATION: GRANTED</span>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                
+                <!-- BIO / SUMMARY -->
+                <div class="report-section">
+                    <div class="report-title">>> Mission Summary (關於我)</div>
+                    <p class="leading-relaxed mb-4">
+                        "失敗、平庸、出色。" <br><br>
+                        擁有 IASP 產業實戰經驗，專精於企業級網路安全架構與威脅防禦。
+                        具備深度的封包流量分析能力 (Traffic Analysis)，能針對 DDoS 攻擊事件進行即時鑑識並提供具體的緩解策略。
+                        近期致力於導入 T-Pot 蜜罐系統以建立主動式威脅情資網，並研究將 AI 技術整合至 PcapHunter 進行自動化流量異常偵測。
+                    </p>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                        <div class="bg-[rgba(255,255,255,0.05)] p-2 text-center">
+                            <div class="text-[var(--color-primary)] text-xl font-bold">29</div>
+                            <div class="text-xs text-gray-400">AGE</div>
+                        </div>
+                        <div class="bg-[rgba(255,255,255,0.05)] p-2 text-center">
+                            <div class="text-[var(--color-primary)] text-xl font-bold">Taichung</div>
+                            <div class="text-xs text-gray-400">BASE</div>
+                        </div>
+                        <div class="bg-[rgba(255,255,255,0.05)] p-2 text-center">
+                            <div class="text-[var(--color-primary)] text-xl font-bold">1 Yr+</div>
+                            <div class="text-xs text-gray-400">EXP</div>
+                        </div>
+                        <div class="bg-[rgba(255,255,255,0.05)] p-2 text-center">
+                            <div class="text-[var(--color-sec)] text-xl font-bold">Available</div>
+                            <div class="text-xs text-gray-400">STATUS</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- WORK EXPERIENCE -->
+                <div class="report-section">
+                    <div class="report-title">>> Service Record (工作經歷)</div>
+                    
+                    <div class="job-item">
+                        <div class="job-header">
+                            <span class="text-xl font-bold text-white">資安分析師 (Security Analyst)</span>
+                            <span class="text-[var(--color-primary)]">2023/6 - Present</span>
+                        </div>
+                        <div class="text-sm text-gray-400 mb-2">台灣數位光訊科技集團 (TBC) | 台灣基礎開發科技</div>
+                        <ul class="list-disc list-inside space-y-1 text-sm text-gray-300">
+                            <li><strong>維護伺服器內部安全：</strong> 成功攔截勒索軟體攻擊，確保資料完整性。</li>
+                            <li><strong>網路異常封包分析：</strong> 使用 Wireshark/Ntop 進行深層流量分析。</li>
+                            <li><strong>系統架設與維護：</strong> 部署蜜罐 (Honeypot)、DNS、SIEM、Suricata、OpenVAS。</li>
+                            <li><strong>自動化流程開發：</strong> 自主開發工具優化內部資安作業流程。</li>
+                        </ul>
+                        <div class="job-tags">
+                            <span class="tag">Firewall</span> <span class="tag">DNS</span> <span class="tag">SIEM</span>
+                        </div>
+                    </div>
+
+                    <div class="job-item">
+                        <div class="job-header">
+                            <span class="text-xl font-bold text-white">維運工程師 (MIS)</span>
+                            <span class="text-[var(--color-primary)]">2019/5 - 2021/1</span>
+                        </div>
+                        <div class="text-sm text-gray-400 mb-2">毅聲科技有限公司</div>
+                        <ul class="list-disc list-inside space-y-1 text-sm text-gray-300">
+                            <li>機房維護及保養、使用者設備及周邊問題排除。</li>
+                            <li>SOP 製作、財產盤點、協助外部廠商對接。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- PROJECTS -->
+                <div class="report-section">
+                    <div class="report-title">>> Operation Achievements (專案成就)</div>
+                    
+                    <div class="job-item">
+                        <div class="font-bold text-white mb-1">企業級資安監控中心 (SOC) 建置計畫</div>
+                        <div class="text-sm text-[var(--color-sec)] mb-2">2024/8 - 進行中</div>
+                        <p class="text-sm mb-2">主導公司內部 SOC 建置，針對開源防禦技術進行深度評估。</p>
+                        <ul class="list-disc list-inside text-sm text-gray-300 space-y-1">
+                            <li><strong>SIEM 建置：</strong> 規劃 FortiSIEM，整合全網日誌 (Logs)，建立關聯規則。</li>
+                            <li><strong>弱點管理：</strong> 導入 Greenbone (GVM)，建立週期性掃描機制。</li>
+                            <li><strong>入侵偵測：</strong> 執行 Suricata IDS POC，進行流量壓力測試與規則調校。</li>
+                            <li><strong>資源整合：</strong> 協助申請政府資安補助，結合 CEH 思維強化防禦。</li>
+                        </ul>
+                    </div>
+
+                    <div class="job-item">
+                        <div class="font-bold text-white mb-1">T-Brain 繁體中文場景文字辨識競賽</div>
+                        <div class="text-sm text-[var(--color-sec)] mb-2">2021/9 - 2021/10</div>
+                        <p class="text-sm">負責 YOLO 模型訓練，結合影像前處理技術。結算成績 0.617473。</p>
+                        <div class="job-tags mt-2">
+                            <span class="tag">Python</span> <span class="tag">YOLO</span> <span class="tag">AI/ML</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EDUCATION & CERT -->
+                <div class="report-section border-none">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <div class="report-title">>> Education</div>
+                            <div class="text-white font-bold">國立勤益科技大學</div>
+                            <div class="text-sm text-gray-400">資訊管理系 | 大學畢業</div>
+                        </div>
+                        <div>
+                            <div class="report-title">>> Certifications</div>
+                            <ul class="text-sm text-gray-300 space-y-1">
+                                <li><i class="fas fa-check text-[var(--color-sec)] mr-2"></i> CEH (Certified Ethical Hacker)</li>
+                                <li><i class="fas fa-check text-[var(--color-sec)] mr-2"></i> 乙級電腦軟體應用技術士</li>
+                                <li><i class="fas fa-check text-[var(--color-sec)] mr-2"></i> 產業新尖兵 AI 人才養成班</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <!-- END MODAL -->
+
     <div class="ui-layer">
         
         <!-- Header -->
@@ -234,7 +366,7 @@
             <div class="flex items-center gap-4">
                 <i class="fas fa-shield-alt text-4xl text-[var(--color-primary)] animate-pulse"></i>
                 <div>
-                    <h1>THREAT_INTEL_MAP // V.4.0</h1>
+                    <h1>THREAT_INTEL_MAP // V.4.1</h1>
                     <div class="mono text-xs text-[var(--color-sec)]">CONNECTED: SECURE NODE [TW-TC-01]</div>
                 </div>
             </div>
@@ -258,16 +390,13 @@
         <aside class="profile-panel ui-panel">
             <h2>TARGET_IDENTITY</h2>
             
-            <!-- X-Ray Scanner -->
-            <div class="scan-container" id="avatar-container">
+            <!-- X-Ray Scanner (NOW CLICKABLE) -->
+            <div class="scan-container" id="avatar-container" onclick="openModal()" title="Click to view full dossier">
                 <div class="scan-grid"></div>
                 <div class="scan-bar"></div>
-                <!-- Base Image (Sunglasses) -->
                 <img src="https://via.placeholder.com/300/000000/00ccff?text=TARGET_LOCKED" 
                      id="base-avatar" class="base-img">
-                <!-- Lens -->
                 <div id="lens" class="xray-lens"></div>
-                
                 <div class="absolute bottom-2 left-2 text-xs bg-black px-2 text-[var(--color-alert)] border border-[var(--color-alert)]">
                     SCANNING...
                 </div>
@@ -286,33 +415,36 @@
                     <span class="label">BASE</span>
                     <span class="value">TAICHUNG, TW</span>
                 </div>
-                <div class="flex justify-between border-b border-[var(--border-tech)] pb-1">
-                    <span class="label">CLEARANCE</span>
-                    <span class="value text-[var(--color-sec)]">LEVEL 5 (ADMIN)</span>
-                </div>
+            </div>
+
+            <!-- CLICKABLE DOSSIER BUTTON -->
+            <div class="mt-4">
+                <button onclick="openModal()" class="w-full bg-[rgba(0,255,153,0.1)] border border-[var(--color-sec)] text-[var(--color-sec)] py-3 font-bold tracking-widest hover:bg-[var(--color-sec)] hover:text-black transition uppercase text-sm animate-pulse shadow-[0_0_10px_rgba(0,255,153,0.3)]">
+                    [ ACCESS FULL DOSSIER ]
+                </button>
             </div>
 
             <div class="mt-auto pt-4">
                 <div class="label mb-2">COMMUNICATION CHANNELS</div>
                 <div class="flex gap-2">
-                    <button class="flex-1 bg-[rgba(0,204,255,0.1)] border border-[var(--color-primary)] text-[var(--color-primary)] py-2 hover:bg-[var(--color-primary)] hover:text-black transition uppercase text-xs" onclick="alert('Decrypting email protocol...')">
+                    <button class="flex-1 bg-[rgba(0,204,255,0.1)] border border-[var(--color-primary)] text-[var(--color-primary)] py-2 hover:bg-[var(--color-primary)] hover:text-black transition uppercase text-xs">
                         <i class="fas fa-envelope mr-1"></i> Email
                     </button>
-                    <button class="flex-1 bg-[rgba(0,204,255,0.1)] border border-[var(--color-primary)] text-[var(--color-primary)] py-2 hover:bg-[var(--color-primary)] hover:text-black transition uppercase text-xs" onclick="alert('Establishing GitHub Uplink...')">
+                    <button class="flex-1 bg-[rgba(0,204,255,0.1)] border border-[var(--color-primary)] text-[var(--color-primary)] py-2 hover:bg-[var(--color-primary)] hover:text-black transition uppercase text-xs">
                         <i class="fab fa-github mr-1"></i> Repo
                     </button>
                 </div>
             </div>
         </aside>
 
-        <!-- Center Message -->
+        <!-- Center Viewport -->
         <div class="center-viewport pointer-events-none">
             <div class="text-center">
                 <div class="text-[var(--color-primary)] text-6xl font-bold opacity-20 tracking-widest">MONITORING</div>
             </div>
         </div>
 
-        <!-- Right: Threat Capabilities (Skills) -->
+        <!-- Right: Skills -->
         <aside class="stats-panel ui-panel">
             <h2>DEFENSE_MODULES</h2>
             
@@ -363,7 +495,7 @@
             </div>
         </aside>
 
-        <!-- Bottom: Operation Logs (Projects) -->
+        <!-- Bottom: Logs -->
         <footer class="logs-panel ui-panel">
             <div class="w-1/3 border-r border-[var(--border-tech)] pr-4 flex flex-col">
                 <h2>OPERATION_LOGS</h2>
@@ -377,9 +509,7 @@
             </div>
             
             <div class="log-container">
-                <div class="log-stream" id="log-stream">
-                    <!-- Logs generated by JS -->
-                </div>
+                <div class="log-stream" id="log-stream"></div>
             </div>
         </footer>
 
@@ -398,45 +528,32 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.getElementById('globe-container').appendChild(renderer.domElement);
 
-        // Sphere (The Globe Wireframe)
+        // Sphere
         const geometry = new THREE.IcosahedronGeometry(10, 2);
-        const material = new THREE.MeshBasicMaterial({ 
-            color: 0x0044ff, 
-            wireframe: true,
-            transparent: true,
-            opacity: 0.3
-        });
+        const material = new THREE.MeshBasicMaterial({ color: 0x0044ff, wireframe: true, transparent: true, opacity: 0.3 });
         const globe = new THREE.Mesh(geometry, material);
         scene.add(globe);
 
-        // Core (Solid inner)
+        // Core
         const coreGeo = new THREE.IcosahedronGeometry(9.8, 2);
         const coreMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
         const core = new THREE.Mesh(coreGeo, coreMat);
         scene.add(core);
 
-        // Particles (Satellites/Nodes)
+        // Particles
         const particlesGeo = new THREE.BufferGeometry();
         const particleCount = 200;
         const posArray = new Float32Array(particleCount * 3);
-
-        for(let i = 0; i < particleCount * 3; i++) {
-            posArray[i] = (Math.random() - 0.5) * 25; // Scatter around
-        }
+        for(let i = 0; i < particleCount * 3; i++) posArray[i] = (Math.random() - 0.5) * 25;
         particlesGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-        const particlesMat = new THREE.PointsMaterial({
-            size: 0.05,
-            color: 0x00ccff,
-        });
+        const particlesMat = new THREE.PointsMaterial({ size: 0.05, color: 0x00ccff });
         const particlesMesh = new THREE.Points(particlesGeo, particlesMat);
         scene.add(particlesMesh);
 
-        // Threat Lines (Arcs representing traffic)
-        // Simple curved lines orbiting
+        // Rings
         const linesMaterial = new THREE.LineBasicMaterial({ color: 0xff3333, transparent: true, opacity: 0.4 });
         const lineGeo = new THREE.BufferGeometry();
         const points = [];
-        // Create a ring of points
         for (let i = 0; i <= 50; i++) {
             const angle = (i / 50) * Math.PI * 2;
             points.push(new THREE.Vector3(Math.cos(angle) * 12, Math.sin(angle) * 12, 0));
@@ -448,7 +565,6 @@
 
         camera.position.z = 25;
 
-        // Animation Loop
         function animate() {
             requestAnimationFrame(animate);
             globe.rotation.y += 0.002;
@@ -456,28 +572,22 @@
             particlesMesh.rotation.y += 0.0005;
             ring.rotation.z -= 0.01;
             ring.rotation.x = Math.sin(Date.now() * 0.001) * 0.5;
-
             renderer.render(scene, camera);
         }
         animate();
 
-        // Resize
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-
         // --- 3. UI Interactions ---
-
-        // System Time Update
         setInterval(() => {
             const now = new Date();
             document.getElementById('sys-time').innerText = now.toISOString().split('T')[1].split('.')[0] + " UTC";
         }, 1000);
 
-        // Logs Generator (Data from Resume)
         const logs = [
             { time: "2024-NOW", msg: "INIT: SOC Architecture Construction [Lead]", type: "INFO" },
             { time: "2024-11", msg: "DEPLOY: FortiSIEM Log Integration Complete", type: "SUCCESS" },
@@ -485,14 +595,11 @@
             { time: "2024-09", msg: "TEST: Suricata IDS Proof of Concept", type: "INFO" },
             { time: "2023-06", msg: "JOIN: Taiwan Digital Optical (TBC) - Analyst", type: "INFO" },
             { time: "2021-10", msg: "PROJECT: T-Brain AI OCR Competition [Score: 0.617]", type: "SUCCESS" },
-            { time: "2021-09", msg: "TRAINING: YOLO Model Image Pre-processing", type: "INFO" },
-            { time: "2019-05", msg: "OPS: MIS Infrastructure Maintenance @ Yi-Sheng", type: "INFO" },
             { time: "SYSTEM", msg: "DETECTED: High proficiency in Packet Analysis", type: "ALERT" },
             { time: "SYSTEM", msg: "CERTIFIED: CEH Ethical Hacker Verified", type: "SUCCESS" }
         ];
 
         const logStream = document.getElementById('log-stream');
-        
         function renderLogs() {
             let html = '';
             logs.forEach(log => {
@@ -500,31 +607,29 @@
                 if(log.type === 'SUCCESS') colorClass = 'text-[var(--color-sec)]';
                 if(log.type === 'WARN') colorClass = 'text-yellow-400';
                 if(log.type === 'ALERT') colorClass = 'text-[var(--color-alert)]';
-
-                html += `
-                    <div class="log-entry">
-                        <span class="timestamp mono">[${log.time}]</span>
-                        <span class="${colorClass}">${log.type} :: ${log.msg}</span>
-                    </div>
-                `;
+                html += `<div class="log-entry"><span class="timestamp mono">[${log.time}]</span><span class="${colorClass}">${log.type} :: ${log.msg}</span></div>`;
             });
             logStream.innerHTML = html;
         }
         renderLogs();
 
-        // Scroll Log Effect (Marquee style vertical)
-        let scrollY = 0;
-        function animateLogs() {
-            // Very simple upward scroll reset
-            // In a real app, we'd append new logs. Here just static.
+        // --- 4. Modal Logic (NEW) ---
+        const modal = document.getElementById('dossier-modal');
+        function openModal() {
+            modal.style.display = 'flex';
         }
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+        // Close when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
 
-
-        // --- 4. X-Ray Lens Logic ---
+        // --- 5. X-Ray Lens Logic ---
         const container = document.getElementById('avatar-container');
         const lens = document.getElementById('lens');
         const baseImg = document.getElementById('base-avatar');
-
         lens.style.backgroundImage = `url('${realPhotoUrl}')`;
         const zoomLevel = 2; 
 
@@ -535,16 +640,12 @@
         function moveLens(e) {
             e.preventDefault();
             const pos = getCursorPos(e);
-            
             let x = pos.x - (lens.offsetWidth / 2);
             let y = pos.y - (lens.offsetHeight / 2);
-
-            // Bounds
-            if (x > baseImg.width - lens.offsetWidth) { x = baseImg.width - lens.offsetWidth; }
-            if (x < 0) { x = 0; }
-            if (y > baseImg.height - lens.offsetHeight) { y = baseImg.height - lens.offsetHeight; }
-            if (y < 0) { y = 0; }
-
+            if (x > baseImg.width - lens.offsetWidth) x = baseImg.width - lens.offsetWidth;
+            if (x < 0) x = 0;
+            if (y > baseImg.height - lens.offsetHeight) y = baseImg.height - lens.offsetHeight;
+            if (y < 0) y = 0;
             lens.style.left = x + "px";
             lens.style.top = y + "px";
             lens.style.backgroundSize = (baseImg.width * zoomLevel) + "px " + (baseImg.height * zoomLevel) + "px";
@@ -559,7 +660,6 @@
             y = e.pageY - a.top - window.scrollY;
             return {x : x, y : y};
         }
-
     </script>
 </body>
 </html>
