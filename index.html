@@ -66,11 +66,11 @@
             padding: 20px;
             gap: 20px;
             box-sizing: border-box;
-            pointer-events: none; /* Allows clicking through to globe for empty spaces */
+            pointer-events: none;
         }
         
         .ui-panel {
-            pointer-events: auto; /* Re-enable clicks for panels */
+            pointer-events: auto;
             background: var(--glass);
             border: var(--border-tech);
             backdrop-filter: blur(5px);
@@ -104,12 +104,17 @@
         .profile-panel { grid-row: 2 / 3; grid-column: 1 / 2; }
         .center-viewport { grid-row: 2 / 3; grid-column: 2 / 3; display: flex; align-items: center; justify-content: center; }
         
-        /* Stats Panel Fix: Hide horizontal overflow */
+        /* Stats Panel Fix: Hide Scrollbar visually but allow scroll */
         .stats-panel { 
             grid-row: 2 / 3; 
             grid-column: 3 / 4; 
             overflow-y: auto; 
-            overflow-x: hidden; /* FIX: Remove horizontal scrollbar */
+            /* Hide scrollbar for Chrome, Safari and Opera */
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        .stats-panel::-webkit-scrollbar {
+            display: none;
         }
         
         .logs-panel { grid-row: 3 / 4; grid-column: 1 / -1; display: flex; gap: 20px; }
@@ -129,41 +134,37 @@
             overflow: hidden; 
             margin-bottom: 15px; 
             background: #000;
-            cursor: pointer; /* Clickable cursor */
+            cursor: pointer;
             transition: border-color 0.3s;
-            user-select: none; /* Prevent selection while using lens */
-            z-index: 20; /* High z-index to stay interactive */
-            pointer-events: auto; /* Ensure container captures events */
+            user-select: none;
+            z-index: 20;
+            pointer-events: auto;
         }
         
         .scan-container:hover {
-            border-color: var(--color-sec); /* Highlight on hover */
+            border-color: var(--color-sec);
         }
 
-        /* CRITICAL FIX: Force all children to ignore pointer events so they don't block the container */
         .scan-container > * {
             pointer-events: none !important;
         }
 
-        /* Z-Index Structure for Image Visibility */
         .scan-grid { 
             position: absolute; top:0; left:0; width:100%; height:100%; 
             background-image: radial-gradient(var(--color-dim) 1px, transparent 1px); 
             background-size: 20px 20px; 
-            z-index: 5; /* Grid on top */
+            z-index: 5;
         }
         
         .base-img { 
             width: 100%; height: 100%; 
             object-fit: cover; 
-            /* REMOVED GRAYSCALE FILTER so it shows color */
-            /* filter: grayscale(100%) contrast(1.2) brightness(0.8); */
-            position: relative; /* Ensure it respects z-index context */
-            z-index: 1; /* Base level */
-            display: block; /* Ensure it takes up space */
+            position: relative; 
+            z-index: 1; 
+            display: block; 
         }
         
-        /* Lens: Updated size to 300px */
+        /* Lens: 300px */
         .xray-lens { 
             position: absolute; 
             width: 300px; 
@@ -173,7 +174,7 @@
             box-shadow: 0 0 15px var(--color-alert), inset 0 0 20px rgba(255,0,0,0.5); 
             background-repeat: no-repeat; 
             display: none; 
-            z-index: 10; /* Lens above grid */
+            z-index: 10;
         }
         
         .scan-bar { 
@@ -181,7 +182,7 @@
             background: var(--color-sec); 
             box-shadow: 0 0 10px var(--color-sec); 
             animation: scanning 2s linear infinite; 
-            z-index: 6; /* Bar above grid */
+            z-index: 6; 
         }
         @keyframes scanning { 0% { top: 0; } 100% { top: 100%; } }
 
@@ -198,11 +199,11 @@
         .log-entry:hover { opacity: 1; background: rgba(0, 204, 255, 0.1); }
         .timestamp { color: var(--color-sec); margin-right: 10px; width: 120px; }
 
-        /* --- MODAL STYLES (New) --- */
+        /* --- MODAL STYLES --- */
         #dossier-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
-            z-index: 100;
+            z-index: 9999; /* Max Z-Index */
             display: none; /* Hidden by default */
             align-items: center; justify-content: center;
         }
@@ -211,7 +212,7 @@
             width: 80%; max-width: 900px; height: 85%;
             background: rgba(5, 10, 20, 0.95);
             border: 1px solid var(--color-primary);
-            box-shadow: 0 0 50px rgba(0, 204, 255, 0.2);
+            box-shadow: 0 0 50px rgba(0, 204, 255, 0.4);
             padding: 0;
             display: flex; flex-direction: column;
             animation: modalOpen 0.3s ease-out;
@@ -231,7 +232,7 @@
             padding: 30px;
             overflow-y: auto;
             color: #d1d5db;
-            font-family: 'Share Tech Mono', monospace; /* Monospace for report feel */
+            font-family: 'Share Tech Mono', monospace;
         }
         
         .modal-close {
@@ -247,12 +248,10 @@
         .job-tags { display: flex; gap: 5px; margin-top: 5px; }
         .tag { font-size: 0.7rem; padding: 2px 6px; border: 1px solid var(--color-primary); color: var(--color-primary); border-radius: 2px; }
 
-        /* Custom Scrollbar for modal */
         .modal-body::-webkit-scrollbar { width: 8px; }
         .modal-body::-webkit-scrollbar-track { background: #000; }
         .modal-body::-webkit-scrollbar-thumb { background: var(--color-primary); }
 
-        /* Mobile */
         @media (max-width: 1024px) {
             .ui-layer { display: block; overflow-y: auto; pointer-events: auto; }
             .profile-panel, .stats-panel, .logs-panel { margin-bottom: 20px; }
@@ -268,8 +267,8 @@
     <div id="globe-container"></div>
     <div class="grid-overlay"></div>
 
-    <!-- MODAL (Hidden by default) -->
-    <div id="dossier-modal">
+    <!-- MODAL (Ensured it's populated and hidden initially) -->
+    <div id="dossier-modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
                 <div class="flex items-center gap-3">
@@ -279,8 +278,8 @@
                         <span class="text-xs text-[var(--color-sec)]">AUTHORIZATION: GRANTED</span>
                     </div>
                 </div>
-                <!-- ID Added for JS Binding -->
-                <button class="modal-close" id="btn-close-modal">
+                <!-- Call closeModal() directly -->
+                <button class="modal-close" onclick="closeModal()">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -431,15 +430,11 @@
         <aside class="profile-panel ui-panel">
             <h2>TARGET_IDENTITY</h2>
             
-            <!-- X-Ray Scanner (NOW CLICKABLE) -->
-            <div class="scan-container" id="avatar-container" title="Click to view full dossier">
+            <!-- X-Ray Scanner -->
+            <div class="scan-container" id="avatar-container" onclick="openModal()" title="Click to view full dossier">
                 <div class="scan-grid"></div>
                 <div class="scan-bar"></div>
                 
-                <!-- 
-                   UPDATED BASE PHOTO:
-                   Direct link to 大頭貼.jpg
-                -->
                 <img src="大頭貼.jpg" 
                      id="base-avatar" 
                      class="base-img" 
@@ -469,9 +464,8 @@
             </div>
 
             <!-- CLICKABLE DOSSIER BUTTON -->
-            <!-- Use ID for listener, z-50 for layer safety, no inline onclick -->
             <div class="mt-4 relative z-50">
-                <button id="btn-access-dossier" class="w-full bg-[rgba(0,255,153,0.1)] border border-[var(--color-sec)] text-[var(--color-sec)] py-3 font-bold tracking-widest hover:bg-[var(--color-sec)] hover:text-black transition uppercase text-sm shadow-[0_0_10px_rgba(0,255,153,0.3)] cursor-pointer pointer-events-auto">
+                <button onclick="openModal()" class="w-full bg-[rgba(0,255,153,0.1)] border border-[var(--color-sec)] text-[var(--color-sec)] py-3 font-bold tracking-widest hover:bg-[var(--color-sec)] hover:text-black transition uppercase text-sm shadow-[0_0_10px_rgba(0,255,153,0.3)] cursor-pointer pointer-events-auto">
                     [ 存取完整機密檔案 ]
                 </button>
             </div>
@@ -700,33 +694,27 @@
         }
         renderLogs();
 
-        // --- 4. Event Binding (SAFE METHOD) ---
-        // Ensure DOM is ready before binding events
-        window.addEventListener('load', () => {
-            const modal = document.getElementById('dossier-modal');
-            const openBtn = document.getElementById('btn-access-dossier');
-            const closeBtn = document.getElementById('btn-close-modal');
-            const avatar = document.getElementById('avatar-container');
+        // --- 4. EXPLICIT GLOBAL FUNCTIONS FOR MODAL ---
+        const modal = document.getElementById('dossier-modal');
+        
+        // Define as global function to ensure onclick works
+        window.openModal = function() {
+            if(modal) {
+                modal.style.display = 'flex';
+            } else {
+                console.error("Modal element not found!");
+            }
+        };
 
-            // Define open function
-            const openModal = () => {
-                if(modal) modal.style.display = 'flex';
-            };
+        window.closeModal = function() {
+            if(modal) {
+                modal.style.display = 'none';
+            }
+        };
 
-            // Define close function
-            const closeModal = () => {
-                if(modal) modal.style.display = 'none';
-            };
-
-            // Bind Events
-            if(openBtn) openBtn.addEventListener('click', openModal);
-            if(avatar) avatar.addEventListener('click', openModal); // Bind to avatar too
-            if(closeBtn) closeBtn.addEventListener('click', closeModal);
-
-            // Close on outside click
-            window.addEventListener('click', (e) => {
-                if (e.target === modal) closeModal();
-            });
+        // Close on outside click
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
         });
 
         // --- 5. X-Ray Lens Logic ---
