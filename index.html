@@ -103,7 +103,7 @@
         /* Grid Areas */
         .profile-panel { grid-row: 2 / 3; grid-column: 1 / 2; }
         .center-viewport { grid-row: 2 / 3; grid-column: 2 / 3; display: flex; align-items: center; justify-content: center; }
-        .stats-panel { grid-row: 2 / 3; grid-column: 3 / 4; overflow-y: auto; }
+        .stats-panel { grid-row: 2 / 3; grid-column: 3 / 4; overflow-y: hidden; /* Removed Scrollbar */ }
         .logs-panel { grid-row: 3 / 4; grid-column: 1 / -1; display: flex; gap: 20px; }
 
         /* Typography */
@@ -155,11 +155,11 @@
             display: block; /* Ensure it takes up space */
         }
         
-        /* Lens: Updated size to 200px */
+        /* Lens: Updated size to 300px */
         .xray-lens { 
             position: absolute; 
-            width: 200px; 
-            height: 200px; 
+            width: 300px; 
+            height: 300px; 
             border: 2px solid var(--color-alert); 
             border-radius: 50%; 
             box-shadow: 0 0 15px var(--color-alert), inset 0 0 20px rgba(255,0,0,0.5); 
@@ -282,12 +282,22 @@
                 <!-- BIO / SUMMARY -->
                 <div class="report-section">
                     <div class="report-title">>> Mission Summary (關於我)</div>
-                    <p class="leading-relaxed mb-4">
+                    <p class="leading-relaxed mb-4 text-gray-300">
                         "失敗、平庸、出色。" <br><br>
-                        擁有 IASP 產業實戰經驗，專精於企業級網路安全架構與威脅防禦。
-                        具備深度的封包流量分析能力 (Traffic Analysis)，能針對 DDoS 攻擊事件進行即時鑑識並提供具體的緩解策略。
-                        近期致力於導入 T-Pot 蜜罐系統以建立主動式威脅情資網，並研究將 AI 技術整合至 PcapHunter 進行自動化流量異常偵測。
+                        我喜歡玩開源 (Wazuh、Suricata、LibreNMS、T-POT) 從零開始建設。
+                        我可以自己寫 Parser 協助 SIEM log 分析、Lua 檢測腳本。
+                        可以自動化的地方，我都會想把它自動化。
+                        我學過 AI，介接過常見 AI API、地端 LLM，也有訓練模型經驗。
                     </p>
+                    <div class="flex flex-wrap gap-2 mb-6">
+                        <span class="px-2 py-1 border border-[var(--color-primary)] text-[var(--color-primary)] text-xs">#藍隊</span>
+                        <span class="px-2 py-1 border border-[var(--color-primary)] text-[var(--color-primary)] text-xs">#DevOps</span>
+                        <span class="px-2 py-1 border border-[var(--color-primary)] text-[var(--color-primary)] text-xs">#SecOps</span>
+                        <span class="px-2 py-1 border border-[var(--color-primary)] text-[var(--color-primary)] text-xs">#紅隊</span>
+                        <span class="px-2 py-1 border border-[var(--color-primary)] text-[var(--color-primary)] text-xs">#自動化</span>
+                        <span class="px-2 py-1 border border-[var(--color-primary)] text-[var(--color-primary)] text-xs">#AI</span>
+                    </div>
+
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                         <div class="bg-[rgba(255,255,255,0.05)] p-2 text-center">
                             <div class="text-[var(--color-primary)] text-xl font-bold">29</div>
@@ -427,8 +437,18 @@
             <div class="scan-container" id="avatar-container" title="Click to view full dossier">
                 <div class="scan-grid"></div>
                 <div class="scan-bar"></div>
-               
-                  
+                
+                <!-- 
+                   UPDATED BASE PHOTO:
+                   Direct link to 大頭貼.jpg
+                -->
+                <img src="大頭貼.jpg" 
+                     id="base-avatar" 
+                     class="base-img" 
+                     draggable="false" 
+                     alt="Hacker Profile"
+                     onerror="this.onerror=null; this.src='大頭貼.JPG'; this.onerror=function(){this.src='大頭貼.png'}">
+                     
                 <div id="lens" class="xray-lens"></div>
                 <div class="absolute bottom-2 left-2 text-xs bg-black px-2 text-[var(--color-alert)] border border-[var(--color-alert)]">
                     SCANNING...
@@ -454,7 +474,7 @@
             <!-- Use ID for listener, z-50 for layer safety, no inline onclick -->
             <div class="mt-4 relative z-50">
                 <button id="btn-access-dossier" class="w-full bg-[rgba(0,255,153,0.1)] border border-[var(--color-sec)] text-[var(--color-sec)] py-3 font-bold tracking-widest hover:bg-[var(--color-sec)] hover:text-black transition uppercase text-sm shadow-[0_0_10px_rgba(0,255,153,0.3)] cursor-pointer pointer-events-auto">
-                    [ ACCESS FULL DOSSIER ]
+                    [ 存取完整機密檔案 ]
                 </button>
             </div>
 
@@ -472,10 +492,35 @@
             </div>
         </aside>
 
-        <!-- Center Viewport -->
-        <div class="center-viewport pointer-events-none">
-            <div class="text-center">
-                <div class="text-[var(--color-primary)] text-6xl font-bold opacity-20 tracking-widest">MONITORING</div>
+        <!-- Center Viewport (NOW WITH CONTENT) -->
+        <div class="center-viewport pointer-events-auto flex items-center justify-center">
+            <!-- CORE DIRECTIVES PANEL -->
+            <div class="ui-panel max-w-lg w-full transform hover:scale-105 transition duration-300">
+                <h2>CORE_DIRECTIVES (核心指令)</h2>
+                
+                <div class="text-gray-300 space-y-4 font-mono text-sm leading-relaxed mb-4">
+                    <p>
+                        <span class="text-[var(--color-primary)]">></span> 我喜歡玩開源 <span class="text-white">(Wazuh、Suricata、LibreNMS、T-POT)</span> 從零開始建設。
+                    </p>
+                    <p>
+                        <span class="text-[var(--color-primary)]">></span> 我可以自己寫 Parser 協助 SIEM log 分析、Lua 檢測腳本。
+                    </p>
+                    <p>
+                        <span class="text-[var(--color-primary)]">></span> 可以自動化的地方，我都會想把它自動化。
+                    </p>
+                    <p>
+                        <span class="text-[var(--color-primary)]">></span> 我學過 AI，介接過常見 AI API、地端 LLM，也有訓練模型經驗。
+                    </p>
+                </div>
+
+                <div class="flex flex-wrap gap-2 border-t border-[var(--border-tech)] pt-4">
+                    <span class="px-2 py-1 bg-[rgba(0,204,255,0.1)] border border-[var(--color-primary)] text-[var(--color-primary)] text-xs tracking-wider">#藍隊</span>
+                    <span class="px-2 py-1 bg-[rgba(0,204,255,0.1)] border border-[var(--color-primary)] text-[var(--color-primary)] text-xs tracking-wider">#DevOps</span>
+                    <span class="px-2 py-1 bg-[rgba(0,204,255,0.1)] border border-[var(--color-primary)] text-[var(--color-primary)] text-xs tracking-wider">#SecOps</span>
+                    <span class="px-2 py-1 bg-[rgba(255,51,51,0.1)] border border-[var(--color-alert)] text-[var(--color-alert)] text-xs tracking-wider">#紅隊</span>
+                    <span class="px-2 py-1 bg-[rgba(0,255,153,0.1)] border border-[var(--color-sec)] text-[var(--color-sec)] text-xs tracking-wider">#自動化</span>
+                    <span class="px-2 py-1 bg-[rgba(0,255,153,0.1)] border border-[var(--color-sec)] text-[var(--color-sec)] text-xs tracking-wider">#AI</span>
+                </div>
             </div>
         </div>
 
